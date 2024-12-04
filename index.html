@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Piano</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f4f8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-weight: 300;
+        }
+
+        #keyboard {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            position: relative;
+            width: 800px;
+            height: 250px;
+            background-color: #ecf0f1;
+            border-radius: 10px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .white-key {
+            width: 60px;
+            height: 200px;
+            background-color: white;
+            border: 2px solid #95a5a6;
+            border-radius: 0 0 5px 5px;
+            margin: 0 2px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: 10px;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+
+        .black-key {
+            width: 40px;
+            height: 130px;
+            background-color: #2c3e50;
+            position: absolute;
+            z-index: 2;
+            border-radius: 0 0 5px 5px;
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .white-key:hover, .black-key:hover {
+            background-color: #e0e0e0;
+        }
+
+        .white-key:active, .black-key:active {
+            background-color: #bdc3c7;
+        }
+
+        .wave-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        #wave-selector {
+            padding: 10px;
+            border: 1px solid #95a5a6;
+            border-radius: 5px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        /* Black key positioning */
+        .black-key[data-key="e"] { position: fixed; left: 635px; top: 160px; color: white;}
+        .black-key[data-key="r"] { position: fixed; top: 160px; left: 703px; color: white;}
+        .black-key[data-key="t"] { position: fixed; top: 160px; left: 840px; color: white;}
+        .black-key[data-key="u"] { position: fixed; top: 160px; left: 905px; color: white;}
+        .black-key[data-key="i"] { position: fixed; top: 160px; left: 975px; color: white;}
+        .black-key[data-key="p"] { position: fixed; top: 160px; left: 1110px; color: white;}
+        .black-key[data-key="["] { position: fixed; top: 160px; left: 1180px; color: white;}
+        .black-key[data-key="]"] { position: fixed; top: 160px; left: 1305px; color: white;}
+    </style>
+</head>
+<body>
+    <h1>8-bit Piano</h1>
+    <div id="keyboard">
+        <!-- White Keys -->
+        <div class="white-key key" data-key="a">A (C3)</div>
+        <div class="white-key key" data-key="s">S (D3)</div>
+        <div class="white-key key" data-key="d">D (E3)</div>
+        <div class="white-key key" data-key="f">F (F3)</div>
+        <div class="white-key key" data-key="g">G (G3)</div>
+        <div class="white-key key" data-key="h">H (A4)</div>
+        <div class="white-key key" data-key="j">J (B4)</div>
+        <div class="white-key key" data-key="k">K (C4)</div>
+        <div class="white-key key" data-key="l">L (D4)</div>
+        <div class="white-key key" data-key=";">; (E4)</div>
+        <div class="white-key key" data-key="'">' (F4)</div>
+
+        <!-- Black Keys -->
+        <div class="black-key key" data-key="e">E</div>
+        <div class="black-key key" data-key="r">R</div>
+        <div class="black-key key" data-key="t">T</div>
+        <div class="black-key key" data-key="u">U</div>
+        <div class="black-key key" data-key="i">I</div>
+        <div class="black-key key" data-key="p">P</div>
+        <div class="black-key key" data-key="[">[</div>
+        <div class="black-key key" data-key="]">]</div>
+        <!-- <div class="black-key key" data-key="\\">\</div> -->
+    </div>
+
+    <label for="wave-selector">Select Wave Style:</label>
+    <select id="wave-selector">
+        <option value="sine">Sine</option>
+        <option value="square">Square</option>
+        <option value="triangle">Triangle</option>
+        <option value="sawtooth">Sawtooth</option>
+        <option value="noise">Noise</option>
+        <option value="flute">Flute</option>
+        <option value="clarinet">Clarinet</option>
+        <option value="organ">Organ</option>
+        <option value="strings">Strings</option>
+        <option value="synth">Synth</option>
+        <option value="piano">Piano</option>
+        <option value="chiptune">Chiptune</option>
+    </select>
+    <h3>Note: Only one key can be played at a time. Please play melodies/create melodies that <br>
+        are playable one key at a time.
+    </h3>
+    <h3>Example melody (Play one key at a time):<br>
+        Twinkle Twinkle Little Star:
+        E E G G 
+        A A G -
+        F F D D
+        S S R -
+        G G F F
+        D D S -
+        G G F F
+        D D R -
+        E E G G
+        A A G -<br>
+
+        Happy Birthday:
+        D D E D G F,
+        D D E D A G,
+        D D (') D F E G,
+        S S L K G F<br>
+
+        Mario Theme:
+        D F G F D F G,
+        G R F R D F G<br>
+    </h3>
+
+    <script>
+        const socket = new WebSocket("ws://localhost:8080/ws");
+
+        socket.onopen = () => console.log("Connected to the WebSocket server");
+        socket.onclose = () => console.log("Disconnected from the WebSocket server");
+
+         // Handle wave type selection
+        const waveSelector = document.getElementById("wave-selector");
+        waveSelector.addEventListener("change", () => {
+            const selectedWave = waveSelector.value;
+            socket.send(JSON.stringify({ type: "wave", wave: selectedWave }));
+        });
+
+        const keys = document.querySelectorAll(".key");
+        keys.forEach(key => {
+            key.addEventListener("click", () => {
+                const keyChar = key.getAttribute("data-key");
+                socket.send(keyChar);
+            });
+        });
+
+        document.addEventListener("keydown", (e) => {
+            const keyChar = e.key.toLowerCase();
+            const keyElement = document.querySelector(`.key[data-key="${keyChar}"]`);
+            if (keyElement) {
+                keyElement.classList.add("active");
+                socket.send(keyChar);
+            }
+        });
+
+        document.addEventListener("keyup", (e) => {
+            const keyChar = e.key.toLowerCase();
+            const keyElement = document.querySelector(`.key[data-key="${keyChar}"]`);
+            if (keyElement) {
+                keyElement.classList.remove("active");
+            }
+        });
+    </script>
+</body>
+</html>

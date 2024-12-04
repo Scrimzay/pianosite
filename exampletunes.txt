@@ -1,0 +1,11 @@
+twinkle twinkle:
+E E G G 
+A A G -
+F F D D
+S S R -
+G G F F
+D D S -
+G G F F
+D D R -
+E E G G
+A A G -
